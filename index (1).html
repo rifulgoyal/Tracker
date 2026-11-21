@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Discipline Tracker</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mut:#6f6e68;--bd:#e3e1da;--ac:#1d9e75;--ac2:#0f6e56;--warn:#d85a30;--l1:#d4efe4;--l2:#8fd3b6;--l3:#3fb286;--l4:#1d9e75;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#151514;--card:#201f1e;--tx:#f1efe8;--mut:#9c9a92;--bd:#34332f;--l1:#1f3a30;--l2:#24604a;--l3:#1f8a65;--l4:#2bb98a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#151514;--card:#201f1e;--tx:#f1efe8;--mut:#9c9a92;--bd:#34332f;--l1:#1f3a30;--l2:#24604a;--l3:#1f8a65;--l4:#2bb98a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 2px}
+.sub{color:var(--mut);font-size:14px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{text-align:center}.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:var(--mut)}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px;font-weight:600}
+.row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--bd);cursor:pointer;user-select:none}
+.row:first-of-type{border-top:0}
+.box{width:28px;height:28px;border-radius:8px;border:2px solid var(--bd);display:grid;place-items:center;flex:none;font-size:17px;color:#fff;transition:.15s}
+.row.on .box{background:var(--ac);border-color:var(--ac)}
+.row .t{flex:1}.row .t small{display:block;color:var(--mut);font-size:12px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);color:var(--mut)}
+.prot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=number]{width:90px;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:16px}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--ac)}
+.bar{height:8px;background:var(--bd);border-radius:99px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--ac);width:0;transition:.2s}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.nav b{font-size:17px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.dow{text-align:center;font-size:11px;color:var(--mut)}
+.d{aspect-ratio:1;border-radius:9px;border:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;position:relative}
+.d small{font-size:10px;color:var(--mut)}
+.d.l1{background:var(--l1)}.d.l2{background:var(--l2)}.d.l3{background:var(--l3);color:#fff}.d.l4{background:var(--l4);color:#fff}
+.d.l3 small,.d.l4 small{color:#ffffffcc}
+.d.sel{outline:2px solid var(--tx);outline-offset:1px}
+.d.today{border-color:var(--tx);border-width:2px}
+.d.fut{opacity:.35;cursor:default}
+.d.empty{border:0;cursor:default}
+.legend{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mut);margin-top:10px;justify-content:flex-end}
+.legend i{width:14px;height:14px;border-radius:4px;border:1px solid var(--bd);display:inline-block}
+.foot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--mut);font-size:12px}
+#status{margin-left:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Discipline Tracker</h1>
+  <div class="sub">Quit the bad. Build the good. Fill the calendar.</div>
+
+  <div class="card stats">
+    <div class="stat"><b id="sCur">0</b><span>Current streak</span></div>
+    <div class="stat"><b id="sBest">0</b><span>Best streak</span></div>
+    <div class="stat"><b id="sPerf">0</b><span>Perfect days (month)</span></div>
+    <div class="stat"><b id="sChecks">0</b><span>Checks (month)</span></div>
+  </div>
+
+  <div class="card">
+    <div class="nav"><button id="selPrev">‹</button><b id="selLabel"></b><button id="selNext">›</button></div>
+    <h2>Quit</h2>
+    <div id="quit"></div>
+    <h2 style="margin-top:14px">Build</h2>
+    <div id="build"></div>
+    <h2 style="margin-top:14px">Protein today</h2>
+    <div class="prot">
+      <input type="number" id="pv" min="0" inputmode="numeric" placeholder="0"> <span>g of</span>
+      <input type="number" id="pg" min="1" inputmode="numeric"> <span>g goal</span>
+      <button data-add="10">+10</button><button data-add="25">+25</button><button data-add="50">+50</button>
+    </div>
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="bar" style="height:10px;margin-top:14px"><i id="dbar" style="background:var(--warn)"></i></div>
+    <div class="sub" id="dtxt" style="margin:6px 0 0"></div>
+  </div>
+
+  <div class="card">
+    <div class="nav"><button id="prev">‹</button><b id="mLabel"></b><button id="next">›</button></div>
+    <div class="cal" id="dows"></div>
+    <div class="cal" id="cal" style="margin-top:5px"></div>
+    <div class="legend">Less <i style="background:var(--card)"></i><i style="background:var(--l1)"></i><i style="background:var(--l2)"></i><i style="background:var(--l3)"></i><i style="background:var(--l4)"></i> All done</div>
+  </div>
+
+  <div class="foot">
+    <button id="signin">Sign in with Google</button>
+    <button id="exp">Export CSV</button>
+    <button id="bak">Backup JSON</button>
+    <button onclick="document.getElementById('imp').click()">Import backup</button>
+    <input type="file" id="imp" accept=".json" hidden>
+    <span id="status"></span>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ====== PASTE YOUR FIREBASE CONFIG HERE (Firebase console > Project settings > Your apps) ======
+const FIREBASE_CONFIG={apiKey: "AIzaSyC7Zb2_IzMcJmw3d7NLUffgubWcQMUxhUw", // Retrieve this from Project Settings
+  authDomain: "tracker-riful.firebaseapp.com",
+  projectId: "tracker-riful",
+  
+  appId: "1:652034544874:web:0b2a443c192a7da4a2b393"};
+// ================================================================================================
+const HABITS=[
+ {id:"nofap",label:"No jerking",sub:"Stayed clean today",g:"quit"},
+ {id:"nojunk",label:"No junk food",sub:"Didn’t eat any junk",g:"quit"},
+ {id:"nosugar",label:"No sugar",sub:"Avoided added sugar",g:"quit"},
+ {id:"gym",label:"Went to the gym",sub:"Workout done",g:"build"},
+ {id:"study",label:"1 hour self-study",sub:"Focused learning",g:"build"}
+];
+const TOTAL=HABITS.length+1; // + protein goal
+const KEY="disc-tracker-v1";
+let S={log:{},goal:100};
+const pad=n=>String(n).padStart(2,"0");
+const dk=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=new Date(); today.setHours(0,0,0,0);
+const TK=dk(today);
+let sel=TK, view=new Date(today.getFullYear(),today.getMonth(),1);
+const $=id=>document.getElementById(id);
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function day(k){return S.log[k]||(S.log[k]={})}
+function count(k){const e=S.log[k];if(!e)return 0;let n=HABITS.filter(h=>e[h.id]).length;if((e.protein||0)>=S.goal)n++;return n}
+function perfect(k){return count(k)===TOTAL}
+
+function streaks(){
+  const keys=Object.keys(S.log).filter(perfect).sort();
+  let best=0,run=0,prev=null;
+  for(const k of keys){
+    const d=new Date(k+"T00:00:00");
+    run=(prev&&(d-prev)===864e5)?run+1:1; prev=d; best=Math.max(best,run);
+  }
+  let cur=0,d=new Date(today);
+  if(!perfect(dk(d)))d.setDate(d.getDate()-1);
+  while(perfect(dk(d))){cur++;d.setDate(d.getDate()-1)}
+  return{cur,best};
+}
+
+function renderChecks(){
+  const e=S.log[sel]||{};
+  for(const g of["quit","build"]){
+    $(g).innerHTML="";
+    HABITS.filter(h=>h.g===g).forEach(h=>{
+      const r=document.createElement("div");
+      r.className="row"+(e[h.id]?" on":"");
+      r.innerHTML='<div class="box">'+(e[h.id]?"✓":"")+'</div><div class="t">'+h.label+'<small>'+h.sub+'</small></div>';
+      r.onclick=()=>{day(sel)[h.id]=!day(sel)[h.id];changed()};
+      $(g).appendChild(r);
+    });
+  }
+  const p=e.protein||0;
+  if(document.activeElement!==$("pv"))$("pv").value=p||"";
+  if(document.activeElement!==$("pg"))$("pg").value=S.goal;
+  $("pbar").style.width=Math.min(100,p/S.goal*100)+"%";
+  const n=count(sel);
+  $("dbar").style.width=(n/TOTAL*100)+"%";
+  $("dtxt").textContent=n+" of "+TOTAL+" done"+(n===TOTAL?" — perfect day!":"");
+  const d=new Date(sel+"T00:00:00");
+  $("selLabel").textContent=(sel===TK?"Today · ":"")+d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+  $("selNext").disabled=sel>=TK;
+}
+
+function renderCal(){
+  $("mLabel").textContent=MONTHS[view.getMonth()]+" "+view.getFullYear();
+  $("dows").innerHTML=["S","M","T","W","T","F","S"].map(x=>'<div class="dow">'+x+'</div>').join("");
+  const c=$("cal");c.innerHTML="";
+  const first=view.getDay(), dim=new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
+  for(let i=0;i<first;i++){const x=document.createElement("div");x.className="d empty";c.appendChild(x)}
+  let perf=0,checks=0;
+  for(let i=1;i<=dim;i++){
+    const k=view.getFullYear()+"-"+pad(view.getMonth()+1)+"-"+pad(i);
+    const n=count(k); checks+=n; if(n===TOTAL)perf++;
+    const x=document.createElement("div");
+    const lvl=n===0?"":n===TOTAL?"l4":n>=TOTAL-2?"l3":n>=3?"l2":"l1";
+    x.className="d "+lvl+(k===sel?" sel":"")+(k===TK?" today":"")+(k>TK?" fut":"");
+    x.innerHTML=i+(n?"<small>"+(n===TOTAL?"✓":n+"/"+TOTAL)+"</small>":"");
+    if(k<=TK)x.onclick=()=>{sel=k;render()};
+    c.appendChild(x);
+  }
+  $("sPerf").textContent=perf;$("sChecks").textContent=checks;
+}
+
+function render(){
+  renderChecks();renderCal();
+  const s=streaks();$("sCur").textContent=s.cur;$("sBest").textContent=s.best;
+}
+
+let timer;
+function changed(){render();$("status").textContent="Saving…";clearTimeout(timer);timer=setTimeout(save,500)}
+
+let fdb=null,fuser=null;
+const cloud=()=>FIREBASE_CONFIG.apiKey.indexOf("PASTE")<0&&window.firebase;
+async function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(fuser){
+    try{await fdb.collection("users").doc(fuser.uid).set({data:JSON.stringify(S),updated:Date.now()});$("status").textContent="Saved online ✓ ("+fuser.email+")";return}
+    catch(e){$("status").textContent="Online save failed — kept on this device";return}
+  }
+  $("status").textContent=cloud()?"Saved on device — sign in to sync":"Saved on this device only";
+}
+function init(){
+  try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
+  render();
+  if(!cloud()){$("signin").style.display="none";$("status").textContent="Local only — add Firebase config to sync";return}
+  firebase.initializeApp(FIREBASE_CONFIG);fdb=firebase.firestore();
+  firebase.auth().onAuthStateChanged(async u=>{
+    fuser=u;$("signin").textContent=u?"Sign out":"Sign in with Google";
+    if(!u){$("status").textContent="Not signed in — sign in to sync";return}
+    try{
+      const snap=await fdb.collection("users").doc(u.uid).get();
+      if(snap.exists){
+        const r=JSON.parse(snap.data().data);
+        for(const k in S.log)if(!r.log[k])r.log[k]=S.log[k];
+        S=Object.assign(S,r);render();
+      }
+      save();
+    }catch(e){$("status").textContent="Couldn’t load online data: "+(e.code||e.message)}
+  });
+}
+$("signin").onclick=()=>{
+  if(fuser)firebase.auth().signOut();
+  else firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>$("status").textContent="Sign-in failed: "+e.code);
+};
+$("pv").oninput=e=>{day(sel).protein=Math.max(0,+e.target.value||0);changed()};
+$("pg").onchange=e=>{S.goal=Math.max(1,+e.target.value||100);changed()};
+document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const d=day(sel);d.protein=(d.protein||0)+(+b.dataset.add);changed()});
+$("prev").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCal()};
+$("next").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCal()};
+function shift(n){const d=new Date(sel+"T00:00:00");d.setDate(d.getDate()+n);const k=dk(d);if(k<=TK){sel=k;view=new Date(d.getFullYear(),d.getMonth(),1);render()}}
+$("selPrev").onclick=()=>shift(-1);$("selNext").onclick=()=>shift(1);
+function dl(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click()}
+$("exp").onclick=()=>{
+  const rows=["date,"+HABITS.map(h=>h.id).join(",")+",protein_g,goal_g"];
+  Object.keys(S.log).sort().forEach(k=>{const e=S.log[k];rows.push(k+","+HABITS.map(h=>e[h.id]?1:0).join(",")+","+(e.protein||0)+","+S.goal)});
+  dl("habit-record.csv",rows.join("\n"),"text/csv");
+};
+$("bak").onclick=()=>dl("habit-backup.json",JSON.stringify(S),"application/json");
+$("imp").onchange=async e=>{
+  try{const r=JSON.parse(await e.target.files[0].text());if(!r.log)throw 0;
+    for(const k in r.log)S.log[k]=r.log[k];if(r.goal)S.goal=r.goal;changed();
+  }catch(x){$("status").textContent="That file isn’t a valid backup"}
+};
+init();
+</script>
+</body>
+</html>
